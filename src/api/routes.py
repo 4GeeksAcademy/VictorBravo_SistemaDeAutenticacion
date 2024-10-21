@@ -24,22 +24,36 @@ def handle_hello():
 def login():
     email = request.json.get("email")
     password = request.json.get("password")
+    remember = request.json.get("remember", False)  # Obtenemos el estado de "Recuérdame"
 
-    # Consulta la base de datos para validar al usuario
+    # Busca al usuario por email
     user = User.query.filter_by(email=email).first()
 
-    # Verifica si el usuario existe y si la contraseña es correcta
-    if not user or not check_password_hash(user.password, password):
-        # el usuario no se encontró en la base de datos
-        return jsonify({"msg": "Credenciales incorrectas."}), 401
-    
-     # Crear tokens de acceso y refresco
-    access_token = create_access_token(identity=user.id)
-    refresh_token = create_refresh_token(identity=user.id)
+    # Verifica si el usuario existe
+    if not user:
+        return jsonify({"msg": "El email no está registrado."}), 404
 
+    # Verifica si la contraseña es correcta
+    if not check_password_hash(user.password, password):
+        return jsonify({"msg": "La contraseña es incorrecta."}), 401
+    
+     # Crear un token de acceso
+    access_token = create_access_token(identity=user.id)
+
+    # Crea la respuesta
     response = jsonify({'msg': 'Login exitoso'})
-    set_access_cookies(response, access_token)  # Almacena el access_token en una cookie HttpOnly
-    set_refresh_cookies(response, refresh_token)  # Almacena el refresh_token en una cookie HttpOnly
+
+    # Establece la cookie para el token
+    if remember:
+        set_access_cookies(response, access_token, max_age=30 * 24 * 60 * 60)  # Cookie válida por 30 días
+    else:
+        set_access_cookies(response, access_token)  # Cookie válida solo durante la sesión
+
+    # Encabezados de control de caché
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+
     return response, 200
 
 @api.route('/token/refresh', methods=['POST'])
@@ -52,13 +66,12 @@ def refresh():
     set_access_cookies(response, new_access_token)  # Guardar el nuevo access token en la cookie
     return response, 200
 
-
+# Logout borrando token
 @api.route('/logout', methods=['POST'])
 def logout():
     response = jsonify({"msg": "Logout exitoso"})
     unset_jwt_cookies(response)  # Elimina las cookies con el token
     return response, 200
-
 
 # Crear usuarios
 @api.route('/signup', methods=['POST'])
@@ -68,13 +81,10 @@ def signup():
     # Datos del usuario
     first_name = data.get('first_name')
     last_name = data.get('last_name')
-    username = data.get('username')
     email = data.get('email')
     password = data.get('password')
     
     # Validar si el usuario o email ya existen
-    if User.query.filter_by(username=username).first() is not None:
-        return jsonify({"error": "Ese usuario ya existe"}), 400
     if User.query.filter_by(email=email).first() is not None:
         return jsonify({"error": "Ese email ya está registrado"}), 400
     if not email or not password:
@@ -87,10 +97,8 @@ def signup():
     new_user = User(
         first_name=first_name,
         last_name=last_name,
-        username=username,
         email=email,
         password=hashed_password,
-        is_active=False
     )
     
     # Guardar el usuario en la base de datos
@@ -101,10 +109,7 @@ def signup():
 
 # Obtener todos los usuarios
 @api.route('/users', methods=['GET'])
-@jwt_required
 def get_users():
-    # Obtener la identidad del usuario desde el token
-    current_user_id = get_jwt_identity()
 
     # Obtener el array de usuarios regitrados 
     users = User.query.all()
@@ -112,19 +117,7 @@ def get_users():
         "id": user.id,
         "first_name": user.first_name,
         "last_name": user.last_name,
-        "username": user.username,
         "email": user.email
     } for user in users]
     
     return jsonify(users_list), 200
-
-
-# Proteger la ruta privada
-@api.route('/private', methods=['GET'])
-@jwt_required()
-def private_route():
-    # Obtener la identidad del usuario desde el token
-    current_user_id = get_jwt_identity()
-
-    # Realizar lógica de la ruta, por ejemplo, devolver datos del usuario
-    return jsonify({"message": f"Acceso permitido para el usuario {current_user_id}"}), 200
