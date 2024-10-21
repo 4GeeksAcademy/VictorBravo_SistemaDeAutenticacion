@@ -84,11 +84,24 @@ def signup():
     email = data.get('email')
     password = data.get('password')
     
-    # Validar si el usuario o email ya existen
+  # Validar si todos los campos requeridos están presentes
+    if not email or not password or not first_name or not last_name:
+        return jsonify({"error": "Todos los campos son obligatorios."}), 400
+
+    # Validar si el formato del email es correcto (simple regex para validación)
+    import re
+    email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
+    if not re.match(email_regex, email):
+        return jsonify({"error": "El formato del email es inválido."}), 422
+
+    # Validar si el email ya está registrado
     if User.query.filter_by(email=email).first() is not None:
-        return jsonify({"error": "Ese email ya está registrado"}), 400
-    if not email or not password:
-            return jsonify({"error": "Email y contraseña son requeridos"}), 400
+        return jsonify({"error": "Ese email ya está registrado."}), 409
+
+    # Validar si la contraseña cumple con los requisitos
+    # (mínimo 8 caracteres, al menos una mayúscula, un número y un carácter especial)
+    if len(password) < 8 or not re.search(r'[A-Z]', password) or not re.search(r'[0-9]', password) or not re.search(r'[\W_]', password):
+        return jsonify({"error": "La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un carácter especial."}), 422
     
     # Hashear la contraseña
     hashed_password = generate_password_hash(password)
@@ -105,7 +118,7 @@ def signup():
     db.session.add(new_user)
     db.session.commit()
 
-    return jsonify({"message": "Usuario registrado exitosamente!"}), 201
+    return jsonify({"message": "Usuario registrado correctamente!"}), 201
 
 # Obtener todos los usuarios
 @api.route('/users', methods=['GET'])

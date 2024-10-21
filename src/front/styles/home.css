@@ -5,3 +5,118 @@
     one more css for each page that will contain the selected used 
     on that page only (the ones not reused in other pages).
 */
+
+/* index.css: Estilos compartidos por todas las páginas */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+    color: #343a40;
+    margin: 0;
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
+    padding: 20px;
+}
+
+.header, .footer {
+    background-color: #343a40;
+    color: #fff;
+}
+
+.nav-link {
+    color: #fff;
+    margin: 0 15px;
+    transition: color 0.3s;
+}
+
+.nav-link:hover,
+.footer a {
+    color: #007bff;
+}
+
+.container, .dashboard-container {
+    margin: auto;
+    padding: 20px;
+}
+
+.container {
+    max-width: 600px;
+}
+
+.dashboard-container {
+    max-width: 1000px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.card, .dashboard-container {
+    border-radius: 8px;
+}
+
+.card-header {
+    background-color: #007bff;
+    color: white;
+}
+
+.card-title, .dashboard-title {
+    margin: 0;
+    text-align: center;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: -10px;
+}
+
+.col-md-6, .col-md-12 {
+    padding: 10px;
+    flex: 1;
+}
+
+.password-toggle-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #6c757d;
+}
+
+.password-toggle-icon i {
+    font-size: 1.2rem;
+}
+
+/* home.css: Estilos específicos de la página de inicio */
+.hero {
+    background: linear-gradient(to right, #007bff, #00bfff);
+    color: #fff;
+}
+
+.features {
+    background-color: #f8f9fa;
+}
+
+.features h4 {
+    margin-top: 20px;
+}
+
+/* dashboard.css: Estilos específicos del dashboard */
+.dashboard-title {
+    font-size: 2rem;
+    margin-bottom: 20px;
+}
+
+/* signupForm.css: Estilos específicos del formulario de registro */
+.position-relative {
+    position: relative;
+}
+
